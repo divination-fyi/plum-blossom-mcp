@@ -5,8 +5,10 @@ import {
   dizhi2num,
   flipBinaryBit,
   getInnerHexagramBinary,
+  gregorianYearToNongli,
   num2bagua,
   tiangan2num,
+  timeToDizhi,
   trigrams2fullGua,
 } from "./utils.ts";
 import { FastMCP } from "fastmcp";
@@ -62,7 +64,7 @@ export const getServer = () => {
       const { year, month, day, hour } = args;
 
       // convert year and hour to numbers
-      const yearNum = tiangan2num(year);
+      const yearNum = dizhi2num(year);
       const hourNum = dizhi2num(hour);
 
       // 年月日为上卦。年月日加时总数为下卦。
@@ -92,12 +94,44 @@ export const getServer = () => {
       const huLowerGua = binary3ToBagua(huLowerBinary);
       const huGua = trigrams2fullGua(huUpperGua, huLowerGua);
 
-      const result =
-        `本卦: ${benGua}, 动爻: ${changingLine}, 变卦: ${bianGua}, 互卦: ${huGua}`;
-
-      return Promise.resolve(result);
+      return Promise.resolve(
+        `本卦: ${benGua}, 动爻: ${changingLine}, 变卦: ${bianGua}, 互卦: ${huGua}`,
+      );
     },
   });
 
+  server.addTool({
+    name: "gregorianYearToNongli",
+    description: "将公历年份转换为农历年份（天干、地支、生肖）",
+    parameters: z.object({
+      year: z.number().int().min(1).describe("公历年份"),
+    }),
+    execute: (args) => {
+      const { year } = args;
+      const { tiangan, dizhi, zodiac } = gregorianYearToNongli(year);
+      return Promise.resolve(
+        `天干: ${tiangan}, 地支: ${dizhi}, 生肖: ${zodiac}`,
+      );
+    },
+  });
+
+  server.addTool({
+    name: "timeToShichen",
+    description: "将时间（hh:mm格式）转换为十二时辰（子、丑、寅等）",
+    parameters: z.object({
+      time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).describe(
+        "时间，hh:mm格式（例如：08:30）",
+      ),
+    }),
+    execute: (args) => {
+      const { time } = args;
+      const [hourStr, minuteStr] = time.split(":");
+      const hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
+
+      const shichen = timeToDizhi(hour, minute);
+      return Promise.resolve(`时辰: ${shichen}`);
+    },
+  });
   return server;
 };

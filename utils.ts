@@ -37,6 +37,49 @@ const dizhiMap: Record<string, number> = {
   "亥": 12,
 };
 
+const tianganArray = [
+  "甲",
+  "乙",
+  "丙",
+  "丁",
+  "戊",
+  "己",
+  "庚",
+  "辛",
+  "壬",
+  "癸",
+];
+
+const dizhiArray = [
+  "子",
+  "丑",
+  "寅",
+  "卯",
+  "辰",
+  "巳",
+  "午",
+  "未",
+  "申",
+  "酉",
+  "戌",
+  "亥",
+];
+
+const zodiacMap: Record<string, string> = {
+  "子": "鼠",
+  "丑": "牛",
+  "寅": "虎",
+  "卯": "兔",
+  "辰": "龙",
+  "巳": "蛇",
+  "午": "马",
+  "未": "羊",
+  "申": "猴",
+  "酉": "鸡",
+  "戌": "狗",
+  "亥": "猪",
+};
+
 const fullHexagramMap: Record<string, { upper: string; lower: string }> = {
   "乾为天": { upper: "乾", lower: "乾" },
   "坤为地": { upper: "坤", lower: "坤" },
@@ -242,4 +285,96 @@ export const getInnerHexagramBinary = (
   const lowerInnerBinary = binary.substring(1, 4); // Lines 2, 3, 4
   const upperInnerBinary = binary.substring(2, 5); // Lines 3, 4, 5
   return { upper: upperInnerBinary, lower: lowerInnerBinary };
+};
+
+export const gregorianYearToNongli = (year: number) => {
+  // The cycle starts from year 4 (甲子)
+  // Heavenly Stem: (year - 4) % 10 + 1, then map to tianganArray
+  // Earthly Branch: (year - 4) % 12 + 1, then map to dizhiArray
+
+  // For simplicity and common usage, we can use (year - 3) for the calculation
+  // as year 3 is 癸亥, year 4 is 甲子.
+  // (year - 3) % 10 for Heavenly Stem index (0-9)
+  // (year - 3) % 12 for Earthly Branch index (0-11)
+
+  const tianganIndex = (year - 4) % 10;
+  const dizhiIndex = (year - 4) % 12;
+
+  const tiangan = tianganArray[tianganIndex];
+  const dizhi = dizhiArray[dizhiIndex];
+  const zodiac = zodiacMap[dizhi];
+
+  return { tiangan, dizhi, zodiac };
+};
+
+export const timeToDizhi = (hour: number, minute: number): string => {
+  // Convert time to a single minute value from 00:00
+  const totalMinutes = hour * 60 + minute;
+
+  // Define the start and end minutes for each Shichen (子时 starts at 23:00 of previous day)
+  // To handle 子时 spanning across midnight, we can adjust the hour for calculation.
+  // Treat 23:00 - 23:59 as part of the current day's 子时, and 00:00 - 00:59 as part of the next day's 子时.
+  // For simplicity, let's map 00:00-00:59 to 子时, 01:00-02:59 to 丑时, etc.
+  // And 23:00-23:59 to 子时.
+
+  // Adjust hour for 子时 (23:00-00:59)
+  let adjustedHour = hour;
+  if (hour === 0) { // 00:00 - 00:59 is 子时
+    adjustedHour = 24; // Treat 00:xx as 24:xx for calculation purposes to align with 23:xx
+  } else if (hour === 23) { // 23:00 - 23:59 is 子时
+    adjustedHour = 23;
+  } else {
+    adjustedHour = hour;
+  }
+
+  // Calculate the index based on adjusted hour
+  // Each Shichen is 2 hours.
+  // 子时: 23-00 (index 0)
+  // 丑时: 01-02 (index 1)
+  // 寅时: 03-04 (index 2)
+  // 卯时: 05-06 (index 3)
+  // 辰时: 07-08 (index 4)
+  // 巳时: 09-10 (index 5)
+  // 午时: 11-12 (index 6)
+  // 未时: 13-14 (index 7)
+  // 申时: 15-16 (index 8)
+  // 酉时: 17-18 (index 9)
+  // 戌时: 19-20 (index 10)
+  // 亥时: 21-22 (index 11)
+
+  // The dizhiArray is 0-indexed: 子, 丑, 寅, 卯, 辰, 巳, 午, 未, 申, 酉, 戌, 亥
+  // So, we need to map the hour to the correct index.
+  // (adjustedHour + 1) % 24 / 2
+  // 23 -> (23+1)%24 = 0 -> 0/2 = 0 (子)
+  // 00 -> (00+1)%24 = 1 -> 1/2 = 0 (子) - This is problematic.
+
+  // Let's use a direct mapping based on the hour ranges.
+  const shichenRanges = [
+    { start: 23, end: 0, dizhi: "子" }, // 23:00 - 00:59
+    { start: 1, end: 2, dizhi: "丑" },
+    { start: 3, end: 4, dizhi: "寅" },
+    { start: 5, end: 6, dizhi: "卯" },
+    { start: 7, end: 8, dizhi: "辰" },
+    { start: 9, end: 10, dizhi: "巳" },
+    { start: 11, end: 12, dizhi: "午" },
+    { start: 13, end: 14, dizhi: "未" },
+    { start: 15, end: 16, dizhi: "申" },
+    { start: 17, end: 18, dizhi: "酉" },
+    { start: 19, end: 20, dizhi: "戌" },
+    { start: 21, end: 22, dizhi: "亥" },
+  ];
+
+  for (const range of shichenRanges) {
+    if (range.start <= range.end) { // Normal range (e.g., 01:00-02:59)
+      if (hour >= range.start && hour <= range.end) {
+        return range.dizhi;
+      }
+    } else { // Range crosses midnight (子时: 23:00-00:59)
+      if (hour >= range.start || hour <= range.end) {
+        return range.dizhi;
+      }
+    }
+  }
+
+  throw new Error(`Invalid time: ${hour}:${minute}`);
 };
