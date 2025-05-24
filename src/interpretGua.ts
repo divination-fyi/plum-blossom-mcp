@@ -58,14 +58,10 @@ export async function interpretGua(
 请开始你的分析：
 `;
 
-  console.log("Prompt for interpretation:", prompt);
-
   const { text } = await generateText({
     model,
     prompt,
   });
-
-  console.log("Interpretation:", text);
 
   if (!text) {
     throw new Error("Interpretation failed, no text returned.");
