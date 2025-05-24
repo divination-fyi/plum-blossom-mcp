@@ -173,7 +173,7 @@ export const flipBinaryBit = (binary: string, line: number): string => {
   return binary.substring(0, index) + flippedBit + binary.substring(index + 1);
 };
 
-export const getInnerGuaBinary = (
+export const getHuGuaBinary = (
   binary: string,
 ): { upper: string; lower: string } => {
   if (binary.length !== 6) {

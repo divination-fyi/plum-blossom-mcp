@@ -32,19 +32,27 @@ const openrouter = createOpenRouter({
   apiKey: OPENROUTER_API_KEY,
 });
 
-export const model = aigateway([
-  openrouter("qwen/qwen3-32b:free", {
-    extraBody: {
-      provider: {
-        order: ["chutes", "open-inference/bf16"],
-      },
+// export const model = aigateway([
+//   openrouter("qwen/qwen3-32b:free", {
+//     extraBody: {
+//       provider: {
+//         order: ["chutes", "open-inference/bf16"],
+//       },
+//     },
+//   }), // Primary model
+//   openrouter("qwen/qwen3-32b", {
+//     extraBody: {
+//       provider: {
+//         only: ["cerebras"],
+//       },
+//     },
+//   }), // Fallback model
+// ]);
+
+export const model = openrouter.chat("qwen/qwen3-32b", {
+  extraBody: {
+    provider: {
+      only: ["cerebras"],
     },
-  }), // Primary model
-  openrouter("qwen/qwen3-32b", {
-    extraBody: {
-      provider: {
-        only: ["cerebras"],
-      },
-    },
-  }), // Fallback model
-]);
+  },
+});
