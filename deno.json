@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --watch --deny-read --allow-net --allow-env --env-file main.ts"
+    "dev": "deno run --watch --deny-read --allow-net --allow-env --env-file src/main.ts"
   },
   "imports": {
     "@openrouter/ai-sdk-provider": "npm:@openrouter/ai-sdk-provider@^0.4.6",

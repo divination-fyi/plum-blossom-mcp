@@ -2,15 +2,12 @@ import {
   bagua2binary,
   binary3ToBagua,
   binary6ToTrigrams,
-  dizhi2num,
   flipBinaryBit,
-  getInnerHexagramBinary,
-  gregorianYearToNongli,
+  getInnerGuaBinary,
   num2bagua,
-  tiangan2num,
-  timeToDizhi,
   trigrams2fullGua,
-} from "./utils.ts";
+} from "./gua.ts";
+import { dizhi2num, gregorianYearToNongli, timeToDizhi } from "./dizhi.ts";
 import { FastMCP } from "fastmcp";
 import { z } from "zod";
 
@@ -24,7 +21,7 @@ export const getServer = () => {
   server.addTool({
     name: "generateGuaByYearMonthDayHour",
     description: "根据年月日时得到卦象" +
-      "（卦象包括本卦、动爻（1-6））、变卦、互卦（、错卦、综卦）" +
+      "（卦象包括本卦、动爻（1-6））、变卦、互卦）" +
       "并返回卦象",
     parameters: z.object({
       year: z.enum([
@@ -88,8 +85,9 @@ export const getServer = () => {
       const bianGua = trigrams2fullGua(bianUpperGua, bianLowerGua);
 
       // Calculate Hu Gua
-      const { upper: huUpperBinary, lower: huLowerBinary } =
-        getInnerHexagramBinary(benGuaBinary);
+      const { upper: huUpperBinary, lower: huLowerBinary } = getInnerGuaBinary(
+        benGuaBinary,
+      );
       const huUpperGua = binary3ToBagua(huUpperBinary);
       const huLowerGua = binary3ToBagua(huLowerBinary);
       const huGua = trigrams2fullGua(huUpperGua, huLowerGua);
