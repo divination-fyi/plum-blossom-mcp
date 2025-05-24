@@ -1,7 +1,12 @@
-export function add(a: number, b: number): number {
-  return a + b;
-}
+import { getServer } from "./mcp-server.ts";
 
 if (import.meta.main) {
-  console.log("Add 2 + 3 =", add(2, 3));
+  const server = getServer();
+
+  server.start({
+    transportType: "httpStream",
+    httpStream: {
+      port: 8000,
+    },
+  });
 }
